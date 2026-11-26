@@ -30,27 +30,27 @@ import ( // standard library packages used by this program
 ) // end of the import list
 
 const ( // fixed configuration values
-	supportPageAddress                               = "https://www.ezurio.com/support"                                                                                 // page where scraping starts
-	supportSeriesPathPrefix                          = "/support/series/"                                                                                               // path prefix every product support link must have
-	documentationPathPrefix                          = "/documentation/"                                                                                                // path prefix of the documentation pages
-	canonicalHostname                                = "www.ezurio.com"                                                                                                 // hostname written in every printed URL
-	acceptedHostnameWithoutWww                       = "ezurio.com"                                                                                                     // alternative hostname accepted in links
-	maximumFetchAttempts                             = 3                                                                                                                // how many times a failing download is tried
-	baseDelayBetweenAttempts                         = 2 * time.Second                                                                                                  // retry delay, multiplied by the attempt number
-	httpRequestTimeout                               = 30 * time.Second                                                                                                 // maximum time allowed for fetching one HTML page
-	pdfDownloadTimeout                               = 5 * time.Minute                                                                                                  // maximum time allowed for downloading one PDF
-	concurrentWorkerCount                            = 4                                                                                                                // number of requests running at the same time
-	pauseAfterEachItem                               = 250 * time.Millisecond                                                                                           // polite pause a worker takes after each request
-	pdfOutputDirectory                               = "PDFs"                                                                                                           // folder that receives the downloaded PDFs
-	pdfOutputDirectoryPermissions        os.FileMode = 0o755                                                                                                            // permissions of the PDFs folder
-	pdfSignature                                     = "%PDF-"                                                                                                          // text every real PDF file starts with
-	pdfSignatureSearchLength                         = 1024                                                                                                             // how many leading bytes are searched for the signature
-	sessionCookieEnvironmentVariableName             = "EZURIO_SESSION_COOKIE"                                                                                          // optional environment variable holding the Cookie header of a logged-in browser session
-	fileDownloadQueryParameter                       = "file_download"                                                                                                  // query parameter used by Ezurio for gated file downloads (/account?file_download=NAME)
-	markupSampleRadius                               = 300                                                                                                              // characters of HTML shown on each side of a "Download PDF" label
-	maximumMarkupSamples                             = 5                                                                                                                // how many pages get such a sample logged
-	debugLoggingEnabled                              = true                                                                                                             // set to false to hide debug log lines
-	userAgentHeaderValue                             = "Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36" // value sent in the User-Agent header
+	supportPageAddress                            = "https://www.ezurio.com/support"                                                                                                                                                                                                                                                                                                                                                                                                 // page where scraping starts
+	supportSeriesPathPrefix                       = "/support/series/"                                                                                                                                                                                                                                                                                                                                                                                                               // path prefix every product support link must have
+	documentationPathPrefix                       = "/documentation/"                                                                                                                                                                                                                                                                                                                                                                                                                // path prefix of the documentation pages
+	canonicalHostname                             = "www.ezurio.com"                                                                                                                                                                                                                                                                                                                                                                                                                 // hostname written in every printed URL
+	acceptedHostnameWithoutWww                    = "ezurio.com"                                                                                                                                                                                                                                                                                                                                                                                                                     // alternative hostname accepted in links
+	maximumFetchAttempts                          = 3                                                                                                                                                                                                                                                                                                                                                                                                                                // how many times a failing download is tried
+	baseDelayBetweenAttempts                      = 2 * time.Second                                                                                                                                                                                                                                                                                                                                                                                                                  // retry delay, multiplied by the attempt number
+	httpRequestTimeout                            = 30 * time.Second                                                                                                                                                                                                                                                                                                                                                                                                                 // maximum time allowed for fetching one HTML page
+	pdfDownloadTimeout                            = 5 * time.Minute                                                                                                                                                                                                                                                                                                                                                                                                                  // maximum time allowed for downloading one PDF
+	concurrentWorkerCount                         = 4                                                                                                                                                                                                                                                                                                                                                                                                                                // number of requests running at the same time
+	pauseAfterEachItem                            = 250 * time.Millisecond                                                                                                                                                                                                                                                                                                                                                                                                           // polite pause a worker takes after each request
+	pdfOutputDirectory                            = "PDFs"                                                                                                                                                                                                                                                                                                                                                                                                                           // folder that receives the downloaded PDFs
+	pdfOutputDirectoryPermissions     os.FileMode = 0o755                                                                                                                                                                                                                                                                                                                                                                                                                            // permissions of the PDFs folder
+	pdfSignature                                  = "%PDF-"                                                                                                                                                                                                                                                                                                                                                                                                                          // text every real PDF file starts with
+	pdfSignatureSearchLength                      = 1024                                                                                                                                                                                                                                                                                                                                                                                                                             // how many leading bytes are searched for the signature
+	hardcodedSessionCookieHeaderValue             = "PHPSESSID=eh0camsogqvi2e6m33dc8jsabu; MkHcLang=en; MkHcCurrencyId=USD; cookieControl=true; cookieControlPrefs=%5B%22analytics%22%2C%22marketing%22%5D; session_source=%7B%22utm_source%22%3A%22%22%2C%22utm_medium%22%3A%22%22%2C%22utm_campaign%22%3A%22%22%2C%22utm_content%22%3A%22%22%2C%22utm_term%22%3A%22%22%2C%22gclid%22%3A%22%22%2C%22web_referrer%22%3A%22https%3A%2F%2Fwww.google.com%2F%22%7D; ezChatPageLoads=30" // hardcoded browser session cookie header
+	fileDownloadQueryParameter                    = "file_download"                                                                                                                                                                                                                                                                                                                                                                                                                  // query parameter used by Ezurio for gated file downloads (/account?file_download=NAME)
+	markupSampleRadius                            = 300                                                                                                                                                                                                                                                                                                                                                                                                                              // characters of HTML shown on each side of a "Download PDF" label
+	maximumMarkupSamples                          = 5                                                                                                                                                                                                                                                                                                                                                                                                                                // how many pages get such a sample logged
+	debugLoggingEnabled                           = true                                                                                                                                                                                                                                                                                                                                                                                                                             // set to false to hide debug log lines
+	userAgentHeaderValue                          = "Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"                                                                                                                                                                                                                                                                                                                 // value sent in the User-Agent header
 ) // end of the constants
 
 // anchorElementPattern captures the attribute text and the inner HTML of every <a ...>...</a> element.
@@ -77,11 +77,14 @@ var htmlTagPattern = regexp.MustCompile(`(?s)<[^>]*>`)
 // htmlCommentPattern matches HTML comments so commented-out links are ignored.
 var htmlCommentPattern = regexp.MustCompile(`(?s)<!--.*?-->`)
 
-// sessionCookieHeaderValue holds the optional logged-in session cookie, read once from the environment.
-var sessionCookieHeaderValue = strings.TrimSpace(os.Getenv(sessionCookieEnvironmentVariableName)) // empty when not configured
+// sessionCookieHeaderValue holds the hardcoded session cookie sent to Ezurio requests.
+var sessionCookieHeaderValue = strings.TrimSpace(hardcodedSessionCookieHeaderValue)
 
-// illegalFileNameCharactersPattern matches characters that operating systems forbid in file names.
-var illegalFileNameCharactersPattern = regexp.MustCompile(`[\\/:*?"<>|\x00-\x1f]`)
+// disallowedStemCharsPattern matches any character outside a-z and 0-9 in a file name stem.
+var disallowedStemCharsPattern = regexp.MustCompile(`[^a-z0-9]+`)
+
+// repeatedUnderscorePattern matches two or more consecutive underscores.
+var repeatedUnderscorePattern = regexp.MustCompile(`_{2,}`)
 
 // errResponseIsPDF is returned by the page fetcher when the server answers with a PDF file instead of an HTML page.
 var errResponseIsPDF = errors.New("response is a PDF file") // lets callers treat the page URL itself as a PDF download
@@ -121,9 +124,9 @@ func main() {
 	downloadHTTPClient := &http.Client{Timeout: pdfDownloadTimeout} // client for PDF files, which can be large
 
 	if sessionCookieHeaderValue == "" { // no cookie configured
-		informationLogger.Printf("warning: %s is not set, so documents that require signing in cannot be downloaded", sessionCookieEnvironmentVariableName) // explain the limitation
+		informationLogger.Printf("warning: no session cookie configured, so documents that require signing in cannot be downloaded") // explain the limitation
 	} else { // cookie configured
-		informationLogger.Printf("using the session cookie from %s for requests to Ezurio", sessionCookieEnvironmentVariableName) // never print the cookie itself
+		informationLogger.Printf("using the hardcoded session cookie for requests to Ezurio") // never print the cookie itself
 	}
 
 	supportPageContent, finalSupportPageURL, fetchError := fetchSupportPage(pageHTTPClient, supportPageAddress) // download the start page
@@ -394,7 +397,7 @@ func hasPDFExtension(candidateURL *url.URL) bool {
 	return strings.HasSuffix(strings.ToLower(downloadedFileName), ".pdf")      // true when the requested file is a PDF
 }
 
-// applySessionCookie adds the optional session cookie to requests that go to the Ezurio website only.
+// applySessionCookie adds the hardcoded session cookie to requests that go to the Ezurio website only.
 func applySessionCookie(httpRequest *http.Request) {
 	if sessionCookieHeaderValue == "" { // no cookie configured
 		return // nothing to add
@@ -569,9 +572,8 @@ func planPDFFileNames(pdfURLs []string) map[string]string {
 		fileName := buildFileNameFromURL(pdfURL)                                 // name derived from the URL
 		ownerURL, nameIsTaken := ownerByLowercaseName[strings.ToLower(fileName)] // check for a collision
 		if nameIsTaken && ownerURL != pdfURL {                                   // another URL already uses this name
-			fileExtension := filepath.Ext(fileName)                                            // for example ".pdf"
-			fileStem := strings.TrimSuffix(fileName, fileExtension)                            // name without extension
-			fileName = fmt.Sprintf("%s-%s%s", fileStem, buildShortHash(pdfURL), fileExtension) // make the name unique
+			fileStem := strings.TrimSuffix(strings.ToLower(fileName), ".pdf")
+			fileName = sanitizeFileStem(fmt.Sprintf("%s_%s", fileStem, buildShortHash(pdfURL))) + ".pdf"
 		}
 		ownerByLowercaseName[strings.ToLower(fileName)] = pdfURL // reserve the name
 		fileNamesByURL[pdfURL] = fileName                        // record the plan
@@ -580,28 +582,53 @@ func planPDFFileNames(pdfURLs []string) map[string]string {
 	return fileNamesByURL // hand back the plan
 }
 
+// sanitizeFileStem normalizes a file stem so it contains only [a-z0-9_], never starts or
+// ends with '_', and never contains '__'.
+func sanitizeFileStem(rawStem string) string {
+	cleaned := disallowedStemCharsPattern.ReplaceAllString(strings.ToLower(rawStem), "_") // replace non-[a-z0-9] with '_'
+	cleaned = repeatedUnderscorePattern.ReplaceAllString(cleaned, "_")                    // collapse any '__' into '_'
+	cleaned = strings.Trim(cleaned, "_")                                                  // strip leading and trailing '_'
+	return cleaned
+}
+
 // buildFileNameFromURL derives a safe file name ending in .pdf from the last segment of the URL path.
 func buildFileNameFromURL(pdfURL string) string {
 	parsedURL, parseError := url.Parse(pdfURL) // parse the URL
-	if parseError != nil {                     // fall back for malformed URLs
-		return "document-" + buildShortHash(pdfURL) + ".pdf" // hash-based name
+	rawName := ""
+	if parseError == nil {
+		rawName = parsedURL.Query().Get(fileDownloadQueryParameter) // gated downloads carry the file name in the query
+		if rawName == "" {                                          // normal links carry it in the path
+			rawName = path.Base(parsedURL.Path) // use the last path segment
+		}
 	}
 
-	lastPathSegment := parsedURL.Query().Get(fileDownloadQueryParameter) // gated downloads carry the file name in the query
-	if lastPathSegment == "" {                                           // normal links carry it in the path
-		lastPathSegment = path.Base(parsedURL.Path) // use the last path segment
-	}
-	lastPathSegment = illegalFileNameCharactersPattern.ReplaceAllString(lastPathSegment, "_") // remove characters the file system forbids
-	lastPathSegment = strings.Trim(lastPathSegment, " .")                                     // remove leading and trailing spaces and dots
-	if lastPathSegment == "" || lastPathSegment == "/" || lastPathSegment == "_" {            // nothing usable in the path
-		lastPathSegment = "document-" + buildShortHash(pdfURL) // hash-based name
+	rawName = strings.TrimSpace(rawName)
+	existingExt := path.Ext(rawName)
+
+	var basePart string
+	alreadyHasPDF := false
+
+	if existingExt != "" {
+		if strings.EqualFold(existingExt, ".pdf") {
+			alreadyHasPDF = true
+			basePart = rawName[:len(rawName)-len(existingExt)]
+		} else {
+			basePart = rawName
+		}
+	} else {
+		basePart = rawName
 	}
 
-	if !strings.HasSuffix(strings.ToLower(lastPathSegment), ".pdf") { // make sure the extension is .pdf
-		lastPathSegment += ".pdf" // append it
+	sanitizedStem := sanitizeFileStem(basePart)
+	if sanitizedStem == "" {
+		sanitizedStem = sanitizeFileStem("document_" + buildShortHash(pdfURL))
 	}
 
-	return lastPathSegment // hand back the file name
+	if alreadyHasPDF {
+		return sanitizedStem + ".pdf"
+	}
+
+	return sanitizedStem + ".pdf"
 }
 
 // buildShortHash returns the first eight hexadecimal characters of the SHA-256 hash of text.
