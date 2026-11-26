@@ -78,6 +78,9 @@ var sessionCookieHeaderValue = strings.TrimSpace(os.Getenv(sessionCookieEnvironm
 // illegalFileNameCharactersPattern matches characters that operating systems forbid in file names.
 var illegalFileNameCharactersPattern = regexp.MustCompile(`[\\/:*?"<>|\x00-\x1f]`)
 
+// errResponseIsPDF is returned by the page fetcher when the server answers with a PDF file instead of an HTML page.
+var errResponseIsPDF = errors.New("response is a PDF file") // lets callers treat the page URL itself as a PDF download
+
 var ( // console loggers
 	informationLogger = log.New(os.Stderr, "INFO  ", log.LstdFlags) // logs normal progress messages
 	errorLogger       = log.New(os.Stderr, "ERROR ", log.LstdFlags) // logs failures and warnings
@@ -161,6 +164,10 @@ func fetchSupportPage(httpClient *http.Client, pageAddress string) (string, *url
 			return pageContent, finalPageURL, nil // hand the result back
 		}
 
+		if errors.Is(fetchError, errResponseIsPDF) { // the page URL itself is a PDF, which is not a failure
+			return "", nil, fetchError // pass the marker on without logging or retrying
+		}
+
 		lastError = fetchError                                                                     // keep the error for the final message
 		errorLogger.Printf("attempt %d for %s failed: %v", attemptNumber, pageAddress, fetchError) // log the failure
 
@@ -200,8 +207,12 @@ func performSingleFetch(httpClient *http.Client, pageAddress string) (string, *u
 		return "", nil, isTemporaryFailure, fmt.Errorf("unexpected HTTP status %s", httpResponse.Status)                                         // only temporary failures are retried
 	}
 
-	contentType := strings.ToLower(httpResponse.Header.Get("Content-Type")) // read the content type
-	if contentType != "" && !strings.Contains(contentType, "html") {        // warn if it does not look like HTML
+	contentType := strings.ToLower(httpResponse.Header.Get("Content-Type"))                               // read the content type
+	contentDisposition := strings.ToLower(httpResponse.Header.Get("Content-Disposition"))                 // read the suggested download name
+	if strings.Contains(contentType, "application/pdf") || strings.Contains(contentDisposition, ".pdf") { // the server sends a PDF file
+		return "", nil, false, errResponseIsPDF // report it without reading the body
+	}
+	if contentType != "" && !strings.Contains(contentType, "html") { // warn if it does not look like HTML
 		errorLogger.Printf("warning: unexpected content type %q for %s, parsing anyway", contentType, pageAddress) // log the warning
 	}
 
@@ -463,7 +474,12 @@ func collectPDFLinksFromDocumentationPages(pageHTTPClient *http.Client, document
 	processConcurrently(documentationPageURLs, func(documentationPageURL string) { // handle each documentation page on a worker
 		pageContent, finalPageURL, fetchError := fetchSupportPage(pageHTTPClient, documentationPageURL) // download the page
 		currentPosition := visitedPageCount.Add(1)                                                      // count this page
-		if fetchError != nil {                                                                          // if it could not be downloaded
+		if errors.Is(fetchError, errResponseIsPDF) {                                                    // the documentation page URL serves a PDF directly
+			pdfSet.addAll([]string{documentationPageURL})                                                                           // download it in the PDF stage
+			informationLogger.Printf("[%d/%d] %s is a PDF file", currentPosition, len(documentationPageURLs), documentationPageURL) // log the finding
+			return                                                                                                                  // nothing else to parse on this page
+		}
+		if fetchError != nil { // if it could not be downloaded
 			errorLogger.Printf("[%d/%d] could not visit %s: %v", currentPosition, len(documentationPageURLs), documentationPageURL, fetchError) // log and move on
 			return                                                                                                                              // skip this page
 		}
