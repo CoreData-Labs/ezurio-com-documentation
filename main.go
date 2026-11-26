@@ -47,6 +47,8 @@ const ( // fixed configuration values
 	pdfSignatureSearchLength                         = 1024                                                                                                             // how many leading bytes are searched for the signature
 	sessionCookieEnvironmentVariableName             = "EZURIO_SESSION_COOKIE"                                                                                          // optional environment variable holding the Cookie header of a logged-in browser session
 	fileDownloadQueryParameter                       = "file_download"                                                                                                  // query parameter used by Ezurio for gated file downloads (/account?file_download=NAME)
+	markupSampleRadius                               = 300                                                                                                              // characters of HTML shown on each side of a "Download PDF" label
+	maximumMarkupSamples                             = 5                                                                                                                // how many pages get such a sample logged
 	debugLoggingEnabled                              = true                                                                                                             // set to false to hide debug log lines
 	userAgentHeaderValue                             = "Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36" // value sent in the User-Agent header
 ) // end of the constants
@@ -65,6 +67,9 @@ var quotedAttributeValuePattern = regexp.MustCompile(`(?is)\b(?:href|src|data|da
 
 // absolutePDFURLPattern captures absolute URLs ending in .pdf anywhere in the text, including inside scripts.
 var absolutePDFURLPattern = regexp.MustCompile(`(?i)https?://[^\s"'<>\\]+?\.pdf(?:\?[^\s"'<>\\]*)?`)
+
+// downloadPDFTextPattern finds the "Download PDF" label that documentation pages show.
+var downloadPDFTextPattern = regexp.MustCompile(`(?i)download\s*pdf`)
 
 // htmlTagPattern matches any HTML tag so the visible text of an anchor can be isolated.
 var htmlTagPattern = regexp.MustCompile(`(?s)<[^>]*>`)
@@ -400,6 +405,24 @@ func applySessionCookie(httpRequest *http.Request) {
 	httpRequest.Header.Set("Cookie", sessionCookieHeaderValue) // identify the logged-in session
 }
 
+// extractDownloadPDFMarkup returns the raw HTML around the first "Download PDF" label, so the real
+// download mechanism (link, button or script) can be inspected.
+func extractDownloadPDFMarkup(pageContent string) string {
+	matchLocation := downloadPDFTextPattern.FindStringIndex(pageContent) // find the label in the raw HTML
+	if matchLocation == nil {                                            // the page has no such label
+		return "no \"Download PDF\" text found in the HTML" // say so
+	}
+	startPosition := matchLocation[0] - markupSampleRadius // begin a little before the label
+	if startPosition < 0 {                                 // do not run past the start
+		startPosition = 0 // clamp to the start
+	}
+	endPosition := matchLocation[1] + markupSampleRadius // end a little after the label
+	if endPosition > len(pageContent) {                  // do not run past the end
+		endPosition = len(pageContent) // clamp to the end
+	}
+	return strings.Join(strings.Fields(pageContent[startPosition:endPosition]), " ") // collapse whitespace to one line
+}
+
 // containsSignInRequirement reports whether a page tells anonymous visitors to sign in.
 func containsSignInRequirement(pageContent string) bool {
 	lowercaseContent := strings.ToLower(pageContent)                                                                           // compare case-insensitively
@@ -468,6 +491,7 @@ func collectPDFLinksFromDocumentationPages(pageHTTPClient *http.Client, document
 	pdfSet := newConcurrentStringSet()       // collects PDF URLs
 	var visitedPageCount atomic.Int64        // counts finished pages for progress logging
 	var signInRequiredPageCount atomic.Int64 // counts pages that ask anonymous visitors to sign in
+	var markupSampleCount atomic.Int64       // counts the markup samples already logged
 
 	informationLogger.Printf("visiting %d documentation pages with %d workers", len(documentationPageURLs), concurrentWorkerCount) // announce the stage
 
@@ -484,8 +508,11 @@ func collectPDFLinksFromDocumentationPages(pageHTTPClient *http.Client, document
 			return                                                                                                                              // skip this page
 		}
 
-		foundPDFURLs := extractPDFURLs(pageContent, finalPageURL) // find PDF links on the page
-		if containsSignInRequirement(pageContent) {               // the page hides its content or downloads behind a login
+		foundPDFURLs := extractPDFURLs(pageContent, finalPageURL)                       // find PDF links on the page
+		if len(foundPDFURLs) == 0 && markupSampleCount.Add(1) <= maximumMarkupSamples { // a page without PDF links: show how its download button is built
+			informationLogger.Printf("markup sample around Download PDF on %s: %s", documentationPageURL, extractDownloadPDFMarkup(pageContent)) // log it
+		}
+		if containsSignInRequirement(pageContent) { // the page hides its content or downloads behind a login
 			signInRequiredPageCount.Add(1) // count it
 		}
 		pdfSet.addAll(foundPDFURLs) // remember them
